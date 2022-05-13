@@ -6,21 +6,18 @@ var t
 var world
 var ties = []
 var currentTilePos
-const HEIGHT = 12
-const WIDTH = 12
+const HEIGHT = 20
+const WIDTH = 20
 var count = 0
-var ordered_tile_list
 var complete
+var busted = false
 
 #TODO
-#at least 1 zero entropy tile spotted - possibleStates = 0 where a contradiction exists
-#the tile is in an impossible state and cannot be changed
-#	 somehow the changes from one tile being collapsed do not ripple across the entire board
-#	 since tiles are only affected in rules by collapsed neighbors
+#edge adjacency
+#why crash when big
 
 
 func _ready():
-	print("BEGIN")
 	randomize()
 	world = make_2d_array(HEIGHT, WIDTH)
 	for i in HEIGHT:
@@ -31,16 +28,32 @@ func _ready():
 			#have to instance these at some point to make actual tiles
 			world[j][i] = current_tile
 			current_tile.pos = Vector2(j,i)
-#	while not finished:
-#		collapse()
-
-func _physics_process(delta):
-	if count % 4 == 0:
-		count = 0;
+	while not complete:
 		collapse()
-	if complete:
-		return
-	count += 1
+
+#func _physics_process(delta):
+#	if busted:
+#		reset()
+#		busted = false;
+#	if count % 1 == 0:
+#		count = 0;
+#		collapse()
+#	if complete:
+#		return
+#	count += 1
+
+func reset():
+	print("RESET")
+	world.clear()
+	world = make_2d_array(HEIGHT, WIDTH)
+	for i in HEIGHT:
+		for j in WIDTH:
+			var current_tile = tile.instance()
+			self.add_child(current_tile)
+			current_tile.global_position = Vector2(i * 32 + 16 + 300, j * 32 + 16 + 100)
+			#have to instance these at some point to make actual tiles
+			world[j][i] = current_tile
+			current_tile.pos = Vector2(j,i)
 
 func collapse():
 	count += 1
@@ -88,7 +101,7 @@ func collapse():
 			return
 		#somehow possibleStates can be 0
 		if currentTile.possibleStates.size() == 0:
-			print("ZERO ENTROPY SPOTTED")
+			busted = true
 			return
 		currentTile.possibleStates = [currentTile.possibleStates[randi()%currentTile.possibleStates.size()]]
 		currentTile.collapsed = true
